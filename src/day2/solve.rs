@@ -9,6 +9,14 @@ pub struct GameInfo {
 
 }
 
+impl GameInfo {
+    fn power(&self) -> u32{
+        self.extractions.iter().map(|e| e.r).max().unwrap() as u32 *
+        self.extractions.iter().map(|e| e.g).max().unwrap() as u32 *
+        self.extractions.iter().map(|e| e.b).max().unwrap() as u32
+    }
+}
+
 pub struct RGB {
     r: u8,
     g: u8,
@@ -23,7 +31,7 @@ impl RGB {
         let mut g = 0;
         let mut b = 0;
 
-        println!("{}", s);
+        debug!("{}", s);
         for c in s.split(", ") {
             let ele = c.split(" ").collect::<Vec<&str>>();
             match ele[1] {
@@ -52,13 +60,18 @@ pub fn part1(file_path: String) -> u32 {
 
 }
 
-// pub fn part2(file_path: String) -> u32 {
-//     let f = File::open(file_path).expect("couldnt open file");
-//     let reader = BufReader::new(f);
+pub fn part2(file_path: String) -> u32 { 
+    let f = File::open(file_path).expect("couldnt open file");
+    let reader = BufReader::new(f);
+    
+    reader.lines()
+        .flat_map( |maybe_l| maybe_l.ok())
+        .map(|l| parse_game(l))
+        .map(|g| g.power())
+        .sum()
 
-//     reader.lines()
-//         .flat_map( |maybe_l| maybe_l.ok())
-// }
+}
+
 
 fn parse_game(l: String) -> GameInfo {
     let elements: Vec<String> = l
@@ -97,9 +110,28 @@ mod tests {
     #[test]
     pub fn test_input_1(){
         let test_file = "src/day2/input".to_string();
-        let expected: u32 = 2;
+        let expected: u32 = 2164;
 
         let result = part1(test_file);
+
+        assert_eq!(result, expected);
+    }
+    #[test]
+    pub fn test_sample_2(){
+        let test_file = "src/day2/sample_2".to_string();
+        let expected = 2286;
+
+        let result = part2(test_file);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    pub fn test_input_2(){
+        let test_file = "src/day2/input".to_string();
+        let expected: u32 = 69929;
+
+        let result = part2(test_file);
 
         assert_eq!(result, expected);
     }
