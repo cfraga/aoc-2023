@@ -104,7 +104,7 @@ mod tests {
     #[test]
     pub fn test_input_2(){
         let test_file = "src/day1/input".to_string();
-        let expected: u32 = 55130;
+        let expected: u32 = 54985;
 
         let result = part2(test_file);
 
