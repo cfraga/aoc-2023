@@ -14,7 +14,7 @@ pub fn part1(file_path: String) -> u32 {
         .map(|(l, r)| winning_numbers(&l, &r))
         .filter(|n| *n > 0)
         .map(|n| score(n))
-        .inspect(|n| println!("score: {}", n))
+        .inspect(|n| debug!("score: {}", n))
         .sum()
 }
 
@@ -31,21 +31,33 @@ fn parse_line(line: String) -> (Vec<u8>, Vec<u8>) {
     (res[0].clone(), res[1].clone())
 }
 
-// pub fn part2(file_path: String) -> u32 {
-//     let f = File::open(file_path).expect("couldnt open file");
-//     let reader = BufReader::new(f);
-//     let mut numbers = Vec::new();
-//     let mut parts = Vec::new();
+pub fn part2(file_path: String) -> u32 {
+    let f = File::open(file_path).expect("couldnt open file");
+    let reader = BufReader::new(f);
+    let mut scratchcards: Vec<[Vec<u8>; 2]> = Vec::new();
+    let mut processed_cards: Vec<u32> = Vec::new();
     
-//     for (n, l) in reader.lines().flat_map( |maybe_l| maybe_l.ok()).enumerate() {
-//         let (n, p) = parse_line(l, n);
-//         numbers.extend(n);
-//         parts.extend(p);
-//     }
-   
-//     calculate_gear_ratios(numbers, parts)
-// }
+    for (n, l) in reader.lines().flat_map( |maybe_l| maybe_l.ok()).enumerate() {
+        let (l, r) = parse_line(l);
+        scratchcards.push([l, r]);
+        processed_cards.push(1);
+    }
 
+    for i in 0..scratchcards.len() {
+        debug!("processing card {} with {}", i, processed_cards[i]);
+        let num_matches = winning_numbers(&scratchcards[i][0], &scratchcards[i][1]);
+        if num_matches > 0 {
+            for n_i in i+1..i+1+num_matches as usize {
+                if n_i < scratchcards.len() {
+                    debug!("adding {} to {}", processed_cards[i],processed_cards[n_i]);
+                    processed_cards[n_i] += processed_cards[i];
+                }
+            }
+        }
+    }
+    debug!("processed_c {:?}", processed_cards);
+    processed_cards.iter().sum()
+}
 
 fn winning_numbers(left: &Vec<u8>, right: &Vec<u8>) -> u8 {
     left.intersect(right.clone()).len() as u8
@@ -75,30 +87,30 @@ mod tests {
     #[test]
     pub fn test_input_1(){
         let test_file = "src/day4/input".to_string();
-        let expected: u32 = 2;
+        let expected: u32 = 22488;
 
         let result = part1(test_file);
 
         assert_eq!(result, expected);
     }
 
-    // #[test]
-    // pub fn test_sample_2(){
-    //     let test_file = "src/day3/sample_1".to_string();
-    //     let expected = 467835;
+    #[test]
+    pub fn test_sample_2(){
+        let test_file = "src/day4/sample_1".to_string();
+        let expected = 30;
 
-    //     let result = part2(test_file);
+        let result = part2(test_file);
 
-    //     assert_eq!(result, expected);
-    // }
+        assert_eq!(result, expected);
+    }
 
-    // #[test]
-    // pub fn test_input_2(){
-    //     let test_file = "src/day3/input".to_string();
-    //     let expected: u32 = 75519888;
+    #[test]
+    pub fn test_input_2(){
+        let test_file = "src/day4/input".to_string();
+        let expected: u32 = 7013204;
 
-    //     let result = part2(test_file);
+        let result = part2(test_file);
 
-    //     assert_eq!(result, expected);
-    // }
+        assert_eq!(result, expected);
+    }
 }
