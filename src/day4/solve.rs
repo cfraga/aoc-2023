@@ -3,6 +3,7 @@ use array_tool::vec::Intersect;
 use log::debug;
 use regex::{Regex, Captures};
 
+const DAY: &str="day4";
 
 pub fn part1(file_path: String) -> u32 { 
     let f = File::open(file_path).expect("couldnt open file");
@@ -20,7 +21,6 @@ pub fn part1(file_path: String) -> u32 {
 
 // sample Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53
 fn parse_line(line: String) -> (Vec<u8>, Vec<u8>) {
-
     let res:Vec<Vec<u8>> = line
         .split(": ")
         .skip(1) //ignoring card number/name
@@ -76,7 +76,7 @@ mod tests {
 
     #[test]
     pub fn test_sample_1(){
-        let test_file = "src/day4/sample_1".to_string();
+        let test_file = format!("src/{}/sample_1", DAY).to_string();
         let expected = 13;
 
         let result = part1(test_file);
@@ -86,7 +86,7 @@ mod tests {
 
     #[test]
     pub fn test_input_1(){
-        let test_file = "src/day4/input".to_string();
+        let test_file = format!("src/{}/input", DAY).to_string();
         let expected: u32 = 22488;
 
         let result = part1(test_file);
@@ -96,7 +96,7 @@ mod tests {
 
     #[test]
     pub fn test_sample_2(){
-        let test_file = "src/day4/sample_1".to_string();
+        let test_file = format!("src/{}/sample_1", DAY).to_string();
         let expected = 30;
 
         let result = part2(test_file);
@@ -106,7 +106,7 @@ mod tests {
 
     #[test]
     pub fn test_input_2(){
-        let test_file = "src/day4/input".to_string();
+        let test_file = format!("src/{}/input", DAY).to_string();
         let expected: u32 = 7013204;
 
         let result = part2(test_file);
