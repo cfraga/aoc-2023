@@ -50,7 +50,7 @@ fn parse_line(line: String) -> Hand {
             'A' => 'e',
             'K' => 'd',
             'Q' => 'c',
-            'J' => 'b',
+            'J' => '1',
             'T' => 'a',
             val @ _ => val,
         };
@@ -81,38 +81,55 @@ fn calc_strength(hand_type: HandType, hand: String) -> u32 {
 }
 
 fn hand_type(reps: &HashMap<char,u32>) -> HandType {
-    let mut count_vec = reps.iter().collect::<Vec<(&char, &u32)>>();
+    let mut count_vec = reps.iter().filter(|(&c,_i)| c != '1').collect::<Vec<(&char, &u32)>>();
     count_vec.sort_by(|a, b| b.1.cmp(a.1));
 
-    println!("hand count {:?}", count_vec);
+    let num_jokers = reps.get(&'1').unwrap_or(&0);
 
-    if count_vec.len() > 3 {
-        if *count_vec[0].1 == 2 {
-            return HandType::OnePair;
-        } else { 
-         return HandType::HighCard;
-        }
-    }
-    if count_vec.len() == 3 {
-        if *count_vec[0].1 == 3 {
-            return HandType::ThreeKind;
-        } else {
-            return HandType::TwoPair;
-        }
-    }
+    debug!("hand count {:?}", count_vec);
 
-    if *count_vec[0].1 == 4 {
-        return HandType::FourKind;
+    match num_jokers {
+        5|4 => { return HandType::FiveKind; },
+        3 => { 
+            match *count_vec[0].1 { 
+               2 => return HandType::FiveKind,
+               _ => return HandType::FourKind,
+            }
+        },
+        2 => {
+            match *count_vec[0].1 { 
+                3 => return HandType::FiveKind,
+                2 => return HandType::FourKind,
+                _ => return HandType::ThreeKind,
+            } 
+        },
+        1 => {
+            match *count_vec[0].1 { 
+                4 => return HandType::FiveKind,
+                3 => return HandType::FourKind,
+                2 => match *count_vec[1].1 {
+                    2 => return HandType::FullHouse,
+                    _ => return HandType::ThreeKind,
+                },
+                _ => return HandType::OnePair,
+            } 
+        },
+        _ =>  {
+            match *count_vec[0].1 { 
+                5 => return HandType::FiveKind,
+                4 => return HandType::FourKind,
+                3 => match *count_vec[1].1 {
+                    2 => return HandType::FullHouse,
+                    _ => return HandType::ThreeKind,
+                },
+                2 => match *count_vec[1].1 {
+                    2 => return HandType::TwoPair,
+                    _ => return HandType::OnePair,
+                },
+                _ => return HandType::HighCard,
+            } 
+        },
     }
-    
-    if count_vec.len() == 2 {
-        return HandType::FullHouse;
-    }
-
-    if *count_vec[0].1 == 5 {
-        return HandType::FiveKind;
-    } 
-    
 
     panic!("wat?! dunno what hand type this is");
 }
@@ -150,23 +167,23 @@ mod tests {
         assert_eq!(result, expected);
     }
 
-    // #[test]
-    // pub fn test_sample_2(){
-    //     let test_file = format!("src/{}/sample_2", DAY).to_string();
-    //     let expected = 71503;
+    #[test]
+    pub fn test_sample_2(){
+        let test_file = format!("src/{}/sample_1", DAY).to_string();
+        let expected = 5905;
 
-    //     let result = part2(test_file);
+        let result = part1(test_file);
 
-    //     assert_eq!(result, expected);
-    // }
+        assert_eq!(result, expected);
+    }
 
-    // #[test]
-    // pub fn test_input_2(){
-    //     let test_file = format!("src/{}/input2", DAY).to_string();
-    //     let expected: u128 = 52510809;
+    #[test]
+    pub fn test_input_2(){
+        let test_file = format!("src/{}/input", DAY).to_string();
+        let expected: u64 = 253473930;
 
-    //     let result = part2(test_file);
+        let result = part2(test_file);
 
-    //     assert_eq!(result, expected);
-    // }
+        assert_eq!(result, expected);
+    }
 }
