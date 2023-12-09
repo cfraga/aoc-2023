@@ -1,5 +1,6 @@
-use std::{collections::HashMap, fs::File, io::{BufReader, BufRead}, num::Wrapping};
+use std::{collections::HashMap, fs::File, io::{BufReader, BufRead}, num::Wrapping, sync::Arc, borrow::{BorrowMut, Borrow}};
 use array_tool::vec::Intersect;
+use dashmap::DashMap;
 use log::debug;
 
 const DAY: &str="day8";
@@ -58,9 +59,72 @@ fn parse_node<'a>(line: String) -> Node {
 
 
 pub fn part2(file_path: String) -> u64 {
+
     let f = File::open(file_path).expect("couldnt open file");
     let reader = BufReader::new(f);
-    todo!();
+    let mut directions = "".to_string();
+    let mut nodes = HashMap::new();
+
+    for (n, l) in reader.lines().flat_map( |maybe_l| maybe_l.ok()).enumerate() {
+        if n == 0 {
+            directions = l.clone();
+        } else {
+            let node = parse_node(l);
+            nodes.insert(node.val.clone(), node);
+        }
+    }
+
+    let mut i = 0;
+    let mut curr_nodes = nodes.values().filter(|n| n.val.ends_with("A")).collect::<Vec<&Node>>();
+    let mut first_iter = vec![0; curr_nodes.len()];
+
+    while true {
+        let curr_char = &directions.as_bytes()[i % directions.len()];
+        i +=1;
+        let mut n_nodes_copy = vec![];
+
+        let n_nodes = curr_nodes.iter().filter(|n| !n.val.ends_with("Z")).map( |curr_node| {
+            match *curr_char as char {
+                'L' => nodes.get(&curr_node.l).unwrap(),
+                'R' => nodes.get(&curr_node.r).unwrap(),
+                _ => panic!("wut??"),
+            }
+        }).collect::<Vec<&Node>>();
+        
+        println!("char:{}\n\tcurr:{:?}\n\tnext:{:?}", curr_char, curr_nodes, n_nodes);
+        if n_nodes_copy.iter().all(|n| n.val.ends_with("Z")) {
+            break;
+        }
+
+        curr_nodes = n_nodes;
+    }
+
+    i as u64
+}
+
+fn traverse_to_z(directions: &String, nodes: DashMap<String, Node>, curr_i: u32, node: &Node) -> (String, u32) {
+    let mut i = curr_i;
+    let mut curr_node = node;
+    loop {
+        let curr_char = &directions.as_bytes()[i as usize % directions.len()];
+        i +=1;
+
+        let n_node = match *curr_char as char {
+                'L' => nodes.get(&curr_node.l).unwrap().borrow(),
+                'R' => nodes.get(&curr_node.r).unwrap().borrow(),
+                _ => panic!("wut??"),
+            };
+        
+        println!("char:{}\n\tcurr:{:?}\n\tnext:{:?}", curr_char, curr_node, n_node);
+        if n_node.val.ends_with("Z") {
+            break;
+        }
+
+        curr_node = n_node;
+    }
+
+    (curr_node.val, i)
+
 }
 
 
@@ -90,23 +154,23 @@ mod tests {
         assert_eq!(result, expected);
     }
 
-    // #[test]
-    // pub fn test_sample_2(){
-    //     let test_file = format!("src/{}/sample_1", DAY).to_string();
-    //     let expected = 5905;
+    #[test]
+    pub fn test_sample_2(){
+        let test_file = format!("src/{}/sample_2", DAY).to_string();
+        let expected = 6;
 
-    //     let result = part2(test_file);
+        let result = part2(test_file);
 
-    //     assert_eq!(result, expected);
-    // }
+        assert_eq!(result, expected);
+    }
 
-    // #[test]
-    // pub fn test_input_2(){
-    //     let test_file = format!("src/{}/input", DAY).to_string();
-    //     let expected: u64 = 253473930;
+    #[test]
+    pub fn test_input_2(){
+        let test_file = format!("src/{}/input", DAY).to_string();
+        let expected: u64 = 2;
 
-    //     let result = part2(test_file);
+        let result = part2(test_file);
 
-    //     assert_eq!(result, expected);
-    // }
+        assert_eq!(result, expected);
+    }
 }
