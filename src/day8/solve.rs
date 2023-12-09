@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fs::File, io::{BufReader, BufRead}, num::Wrapping, sync::Arc, borrow::{BorrowMut, Borrow}};
 use array_tool::vec::Intersect;
-use dashmap::DashMap;
+
 use log::debug;
 
 const DAY: &str="day8";
@@ -81,50 +81,53 @@ pub fn part2(file_path: String) -> u64 {
     while true {
         let curr_char = &directions.as_bytes()[i % directions.len()];
         i +=1;
-        let mut n_nodes_copy = vec![];
-
-        let n_nodes = curr_nodes.iter().filter(|n| !n.val.ends_with("Z")).map( |curr_node| {
-            match *curr_char as char {
-                'L' => nodes.get(&curr_node.l).unwrap(),
-                'R' => nodes.get(&curr_node.r).unwrap(),
-                _ => panic!("wut??"),
-            }
-        }).collect::<Vec<&Node>>();
+        let n_nodes = curr_nodes.iter()
+            .enumerate()
+            // .filter(|n| !n.1.val.ends_with("Z"))
+            .map( |curr_node| {
+                if curr_node.1.val.ends_with("Z") {
+                    curr_node.1
+                } else {
+                    let next_n = match *curr_char as char {
+                        'L' => nodes.get(&curr_node.1.l).unwrap(),
+                        'R' => nodes.get(&curr_node.1.r).unwrap(),
+                        _ => panic!("wut??"),
+                    };
+                    if next_n.val.ends_with("Z") {
+                        first_iter[curr_node.0] = i as u128;
+                    }
+                    next_n
+                }
+                
+            }).collect::<Vec<&Node>>();
         
-        println!("char:{}\n\tcurr:{:?}\n\tnext:{:?}", curr_char, curr_nodes, n_nodes);
-        if n_nodes_copy.iter().all(|n| n.val.ends_with("Z")) {
+        println!("char:{}\tpath:{}\n\tcurr:{:?}\n\tnext:{:?}", curr_char, i, curr_nodes, n_nodes);
+        if n_nodes.iter().all(|n| n.val.ends_with("Z")) {
             break;
         }
 
+        
         curr_nodes = n_nodes;
     }
 
-    i as u64
+    println!("iters: {:?}", first_iter);
+    lcm(&first_iter) as u64
 }
 
-fn traverse_to_z(directions: &String, nodes: DashMap<String, Node>, curr_i: u32, node: &Node) -> (String, u32) {
-    let mut i = curr_i;
-    let mut curr_node = node;
-    loop {
-        let curr_char = &directions.as_bytes()[i as usize % directions.len()];
-        i +=1;
-
-        let n_node = match *curr_char as char {
-                'L' => nodes.get(&curr_node.l).unwrap().borrow(),
-                'R' => nodes.get(&curr_node.r).unwrap().borrow(),
-                _ => panic!("wut??"),
-            };
-        
-        println!("char:{}\n\tcurr:{:?}\n\tnext:{:?}", curr_char, curr_node, n_node);
-        if n_node.val.ends_with("Z") {
-            break;
-        }
-
-        curr_node = n_node;
+pub fn lcm(nums: &[u128]) -> u128 {
+    if nums.len() == 1 {
+        return nums[0];
     }
+    let a = nums[0];
+    let b = lcm(&nums[1..]);
+    a * b / gcd_of_two_numbers(a, b)
+}
 
-    (curr_node.val, i)
-
+fn gcd_of_two_numbers(a: u128, b: u128) -> u128 {
+    if b == 0 {
+        return a;
+    }
+    gcd_of_two_numbers(b, a % b)
 }
 
 
@@ -147,7 +150,7 @@ mod tests {
     #[test]
     pub fn test_input_1(){
         let test_file = format!("src/{}/input", DAY).to_string();
-        let expected: u64 = 2;
+        let expected: u64 = 22411;
 
         let result = part1(test_file);
 
